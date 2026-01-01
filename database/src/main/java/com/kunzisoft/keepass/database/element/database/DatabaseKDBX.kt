@@ -262,9 +262,6 @@ class DatabaseKDBX : DatabaseVersioned<UUID, UUID, GroupKDBX, EntryKDBX> {
             keyFileBytes,
             hardwareKeyBytes
         )
-
-        // Build check key
-        this.checkKey = masterCredential.getCheckKey()
     }
 
     @Throws(DatabaseOutputException::class)

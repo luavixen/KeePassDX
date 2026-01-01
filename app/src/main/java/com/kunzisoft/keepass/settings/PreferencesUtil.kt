@@ -690,18 +690,6 @@ object PreferencesUtil {
             context.resources.getBoolean(R.bool.passkeys_close_database_default))
     }
 
-    fun isUserVerificationDeviceCredential(context: Context): Boolean {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        return prefs.getBoolean(context.getString(R.string.user_verification_device_credential_key),
-            context.resources.getBoolean(R.bool.user_verification_device_credential_default))
-    }
-
-    fun isUserVerificationPreferred(context: Context): Boolean {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        return prefs.getBoolean(context.getString(R.string.user_verification_preferred_key),
-            context.resources.getBoolean(R.bool.user_verification_preferred_default))
-    }
-
     fun isPasskeyBackupEligibilityEnable(context: Context): Boolean {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         return prefs.getBoolean(context.getString(R.string.passkeys_backup_eligibility_key),
@@ -840,7 +828,6 @@ object PreferencesUtil {
             when (name) {
                 context.getString(R.string.allow_no_password_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.delete_entered_password_key) -> editor.putBoolean(name, value.toBoolean())
-                context.getString(R.string.user_verification_device_credential_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.enable_auto_save_database_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.enable_keep_screen_on_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.auto_focus_search_key) -> editor.putBoolean(name, value.toBoolean())
@@ -878,7 +865,6 @@ object PreferencesUtil {
                 context.getString(R.string.keyboard_previous_lock_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.passkeys_close_database_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.passkeys_auto_select_key) -> editor.putBoolean(name, value.toBoolean())
-                context.getString(R.string.user_verification_preferred_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.passkeys_backup_eligibility_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.passkeys_backup_state_key) -> editor.putBoolean(name, value.toBoolean())
                 context.getString(R.string.autofill_close_database_key) -> editor.putBoolean(name, value.toBoolean())

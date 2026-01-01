@@ -158,9 +158,6 @@ class DatabaseKDB : DatabaseVersioned<Int, UUID, GroupKDB, EntryKDB>() {
         } else {
             this.masterKey = passwordBytes ?: keyFileBytes ?: byteArrayOf(0)
         }
-
-        // Build check key
-        this.checkKey = masterCredential.getCheckKey()
     }
 
     override fun createGroup(): GroupKDB {

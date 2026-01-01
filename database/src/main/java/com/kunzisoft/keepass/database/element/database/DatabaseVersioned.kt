@@ -58,8 +58,6 @@ abstract class DatabaseVersioned<
         protected set
     var transformSeed: ByteArray? = null
 
-    var checkKey = ByteArray(32)
-
     abstract val version: String
     abstract val defaultFileExtension: String
 
@@ -119,7 +117,6 @@ abstract class DatabaseVersioned<
     fun copyMasterKeyFrom(databaseVersioned: DatabaseVersioned<GroupId, EntryId, Group, Entry>) {
         this.masterKey = databaseVersioned.masterKey
         this.transformSeed = databaseVersioned.transformSeed
-        this.checkKey = databaseVersioned.checkKey
     }
 
     /*

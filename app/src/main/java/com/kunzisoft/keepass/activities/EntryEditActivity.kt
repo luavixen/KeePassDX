@@ -64,9 +64,6 @@ import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.retrieveReg
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.retrieveSearchInfo
 import com.kunzisoft.keepass.credentialprovider.passkey.util.PasskeyHelper.buildPasskeyResponseAndSetResult
 import com.kunzisoft.keepass.credentialprovider.TypeMode
-import com.kunzisoft.keepass.credentialprovider.UserVerificationActionType
-import com.kunzisoft.keepass.credentialprovider.UserVerificationData
-import com.kunzisoft.keepass.credentialprovider.UserVerificationHelper.Companion.checkUserVerification
 import com.kunzisoft.keepass.credentialprovider.passkey.util.PasswordHelper.buildPasswordResponseAndSetResult
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.element.Attachment
@@ -101,11 +98,9 @@ import com.kunzisoft.keepass.view.asError
 import com.kunzisoft.keepass.view.hideByFading
 import com.kunzisoft.keepass.view.setTransparentNavigationBar
 import com.kunzisoft.keepass.view.showActionErrorIfNeeded
-import com.kunzisoft.keepass.view.showError
 import com.kunzisoft.keepass.view.updateLockPaddingStart
 import com.kunzisoft.keepass.viewmodels.ColorPickerViewModel
 import com.kunzisoft.keepass.viewmodels.EntryEditViewModel
-import com.kunzisoft.keepass.viewmodels.UserVerificationViewModel
 import kotlinx.coroutines.launch
 import java.util.EnumSet
 import java.util.UUID
@@ -134,7 +129,6 @@ class EntryEditActivity : DatabaseLockActivity(),
     private var mTemplatesSelectorAdapter: TemplatesSelectorAdapter? = null
 
     private val mColorPickerViewModel: ColorPickerViewModel by viewModels()
-    private val mUserVerificationViewModel: UserVerificationViewModel by viewModels()
 
     private var mAllowCustomFields = false
     private var mAllowOTP = false
@@ -404,54 +398,14 @@ class EntryEditActivity : DatabaseLockActivity(),
                             mEntryEditViewModel.actionPerformed()
                         }
                         is EntryEditViewModel.EntryEditState.OnChangeFieldProtectionRequested -> {
-                            mDatabase?.let { database ->
-                                val fieldProtection = entryEditState.fieldProtection
-                                if (fieldProtection.isCurrentlyProtected) {
-                                    checkUserVerification(
-                                        userVerificationViewModel = mUserVerificationViewModel,
-                                        dataToVerify = UserVerificationData(
-                                            actionType = UserVerificationActionType.SHOW_PROTECTED_FIELD,
-                                            database = database,
-                                            fieldProtection = fieldProtection
-                                        )
-                                    )
-                                    mEntryEditViewModel.actionPerformed()
-                                } else {
-                                    mEntryEditViewModel.updateFieldProtection(
-                                        fieldProtection = fieldProtection,
-                                        value = true
-                                    )
-                                }
-                            }
+                            val fieldProtection = entryEditState.fieldProtection
+                            // Toggle field protection directly without user verification
+                            mEntryEditViewModel.updateFieldProtection(
+                                fieldProtection = fieldProtection,
+                                value = !fieldProtection.isCurrentlyProtected
+                            )
                         }
                         is EntryEditViewModel.EntryEditState.OnFieldProtectionUpdated -> {}
-                    }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mUserVerificationViewModel.userVerificationState.collect { uVState ->
-                    when (uVState) {
-                        is UserVerificationViewModel.UVState.Loading -> {}
-                        is UserVerificationViewModel.UVState.OnUserVerificationCanceled -> {
-                            coordinatorLayout?.showError(uVState.error)
-                            mUserVerificationViewModel.onUserVerificationReceived()
-                        }
-                        is UserVerificationViewModel.UVState.OnUserVerificationSucceeded -> {
-                            when (uVState.dataToVerify.actionType) {
-                                UserVerificationActionType.SHOW_PROTECTED_FIELD -> {
-                                    uVState.dataToVerify.fieldProtection?.let { fieldProtection ->
-                                        mEntryEditViewModel.updateFieldProtection(
-                                            fieldProtection = fieldProtection,
-                                            value = false
-                                        )
-                                    }
-                                }
-                                else -> {}
-                            }
-                            mUserVerificationViewModel.onUserVerificationReceived()
-                        }
                     }
                 }
             }

@@ -56,10 +56,6 @@ import com.kunzisoft.keepass.activities.helpers.ExternalFileHelper
 import com.kunzisoft.keepass.activities.legacy.DatabaseLockActivity
 import com.kunzisoft.keepass.adapters.TagsAdapter
 import com.kunzisoft.keepass.credentialprovider.SpecialMode
-import com.kunzisoft.keepass.credentialprovider.UserVerificationActionType
-import com.kunzisoft.keepass.credentialprovider.UserVerificationData
-import com.kunzisoft.keepass.credentialprovider.UserVerificationHelper.Companion.checkUserVerification
-import com.kunzisoft.keepass.credentialprovider.UserVerificationHelper.Companion.isUserVerificationNeeded
 import com.kunzisoft.keepass.credentialprovider.magikeyboard.MagikeyboardService
 import com.kunzisoft.keepass.database.ContextualDatabase
 import com.kunzisoft.keepass.database.element.Attachment
@@ -84,9 +80,7 @@ import com.kunzisoft.keepass.view.changeTitleColor
 import com.kunzisoft.keepass.view.hideByFading
 import com.kunzisoft.keepass.view.setTransparentNavigationBar
 import com.kunzisoft.keepass.view.showActionErrorIfNeeded
-import com.kunzisoft.keepass.view.showError
 import com.kunzisoft.keepass.viewmodels.EntryViewModel
-import com.kunzisoft.keepass.viewmodels.UserVerificationViewModel
 import kotlinx.coroutines.launch
 import java.util.EnumSet
 import java.util.UUID
@@ -109,7 +103,6 @@ class EntryActivity : DatabaseLockActivity() {
     private var loadingView: ProgressBar? = null
 
     private val mEntryViewModel: EntryViewModel by viewModels()
-    private val mUserVerificationViewModel: UserVerificationViewModel by viewModels()
 
     private val mEntryActivityEducation = EntryActivityEducation(this)
 
@@ -327,78 +320,20 @@ class EntryActivity : DatabaseLockActivity() {
                     when (entryState) {
                         is EntryViewModel.EntryState.Loading -> {}
                         is EntryViewModel.EntryState.OnChangeFieldProtectionRequested -> {
-                            mDatabase?.let { database ->
-                                val fieldProtection = entryState.fieldProtection
-                                if (fieldProtection.isCurrentlyProtected) {
-                                    checkUserVerification(
-                                        userVerificationViewModel = mUserVerificationViewModel,
-                                        dataToVerify = UserVerificationData(
-                                            actionType = UserVerificationActionType.SHOW_PROTECTED_FIELD,
-                                            database = database,
-                                            fieldProtection = fieldProtection
-                                        )
-                                    )
-                                    mEntryViewModel.actionPerformed()
-                                } else {
-                                    mEntryViewModel.updateProtectionField(
-                                        fieldProtection = fieldProtection,
-                                        value = true
-                                    )
-                                }
-                            }
+                            val fieldProtection = entryState.fieldProtection
+                            // Toggle field protection directly without user verification
+                            mEntryViewModel.updateProtectionField(
+                                fieldProtection = fieldProtection,
+                                value = !fieldProtection.isCurrentlyProtected
+                            )
                         }
                         is EntryViewModel.EntryState.OnFieldProtectionUpdated -> {}
                         is EntryViewModel.EntryState.RequestCopyProtectedField -> {
-                            mDatabase?.let { database ->
-                                checkUserVerification(
-                                    userVerificationViewModel = mUserVerificationViewModel,
-                                    dataToVerify = UserVerificationData(
-                                        actionType = UserVerificationActionType.COPY_PROTECTED_FIELD,
-                                        database = database,
-                                        fieldProtection = entryState.fieldProtection,
-                                    )
-                                )
+                            // Copy field value directly without user verification
+                            entryState.fieldProtection.field.let {
+                                mEntryViewModel.copyToClipboard(it)
                             }
                             mEntryViewModel.actionPerformed()
-                        }
-                    }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                mUserVerificationViewModel.userVerificationState.collect { uVState ->
-                    when (uVState) {
-                        is UserVerificationViewModel.UVState.Loading -> {}
-                        is UserVerificationViewModel.UVState.OnUserVerificationCanceled -> {
-                            coordinatorLayout?.showError(uVState.error)
-                            mUserVerificationViewModel.onUserVerificationReceived()
-                        }
-                        is UserVerificationViewModel.UVState.OnUserVerificationSucceeded -> {
-                            val data = uVState.dataToVerify
-                            when (data.actionType) {
-                                UserVerificationActionType.SHOW_PROTECTED_FIELD -> {
-                                    // Unprotect field by its view
-                                    data.fieldProtection?.let { field ->
-                                        mEntryViewModel.updateProtectionField(
-                                            fieldProtection = field,
-                                            value = false
-                                        )
-                                    }
-                                }
-                                UserVerificationActionType.COPY_PROTECTED_FIELD -> {
-                                    // Copy field value
-                                    data.fieldProtection?.field?.let {
-                                        mEntryViewModel.copyToClipboard(it)
-                                    }
-                                }
-                                UserVerificationActionType.EDIT_ENTRY -> {
-                                    // Edit Entry
-                                    editEntry(data.database, data.entryId)
-                                }
-                                else -> {}
-                            }
-                            mUserVerificationViewModel.onUserVerificationReceived()
                         }
                     }
                 }
@@ -573,20 +508,8 @@ class EntryActivity : DatabaseLockActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_edit -> {
-                if (mEntryViewModel.entryInfo?.isUserVerificationNeeded() == true) {
-                    mDatabase?.let { database ->
-                        checkUserVerification(
-                            userVerificationViewModel = mUserVerificationViewModel,
-                            dataToVerify = UserVerificationData(
-                                actionType = UserVerificationActionType.EDIT_ENTRY,
-                                database = database,
-                                entryId = mEntryViewModel.mainEntryId
-                            )
-                        )
-                    }
-                } else {
-                    editEntry(mDatabase, mEntryViewModel.mainEntryId)
-                }
+                // Edit entry directly without user verification
+                editEntry(mDatabase, mEntryViewModel.mainEntryId)
                 return true
             }
             R.id.menu_restore_entry_history -> {

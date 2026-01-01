@@ -75,10 +75,6 @@ import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.removeModes
 import com.kunzisoft.keepass.credentialprovider.EntrySelectionHelper.retrieveSearchInfo
 import com.kunzisoft.keepass.credentialprovider.SpecialMode
 import com.kunzisoft.keepass.credentialprovider.TypeMode
-import com.kunzisoft.keepass.credentialprovider.UserVerificationActionType
-import com.kunzisoft.keepass.credentialprovider.UserVerificationData
-import com.kunzisoft.keepass.credentialprovider.UserVerificationHelper.Companion.checkUserVerification
-import com.kunzisoft.keepass.credentialprovider.UserVerificationHelper.Companion.isUserVerificationNeeded
 import com.kunzisoft.keepass.credentialprovider.passkey.util.PasskeyHelper.buildPasskeyResponseAndSetResult
 import com.kunzisoft.keepass.credentialprovider.passkey.util.PasswordHelper.buildPasswordResponseAndSetResult
 import com.kunzisoft.keepass.database.ContextualDatabase
@@ -129,7 +125,6 @@ import com.kunzisoft.keepass.view.updateLockPaddingStart
 import com.kunzisoft.keepass.viewmodels.GroupEditViewModel
 import com.kunzisoft.keepass.viewmodels.GroupViewModel
 import com.kunzisoft.keepass.viewmodels.MainCredentialViewModel
-import com.kunzisoft.keepass.viewmodels.UserVerificationViewModel
 import kotlinx.coroutines.launch
 import org.joda.time.LocalDateTime
 import java.util.EnumSet
@@ -166,7 +161,6 @@ class GroupActivity : DatabaseLockActivity(),
     private val mGroupViewModel: GroupViewModel by viewModels()
     private val mGroupEditViewModel: GroupEditViewModel by viewModels()
     private val mMainCredentialViewModel: MainCredentialViewModel by viewModels()
-    private val mUserVerificationViewModel: UserVerificationViewModel by viewModels()
 
     private val mGroupActivityEducation = GroupActivityEducation(this)
 
@@ -367,21 +361,16 @@ class GroupActivity : DatabaseLockActivity(),
                         SettingsActivity.launch(this@GroupActivity, true)
                     }
                     R.id.menu_merge_from -> {
-                        checkUserVerification(
-                            userVerificationViewModel = mUserVerificationViewModel,
-                            dataToVerify = UserVerificationData(
-                                actionType = UserVerificationActionType.MERGE_FROM_DATABASE,
-                                database = mDatabase
-                            )
-                        )
+                        // Open document picker directly without verification
+                        mExternalFileHelper?.openDocument()
                     }
                     R.id.menu_save_copy_to -> {
-                        checkUserVerification(
-                            userVerificationViewModel = mUserVerificationViewModel,
-                            dataToVerify = UserVerificationData(
-                                actionType = UserVerificationActionType.SAVE_DATABASE_COPY_TO,
-                                database = mDatabase
-                            )
+                        // Create document directly without verification
+                        mExternalFileHelper?.createDocument(
+                            getString(R.string.database_file_name_default) +
+                                    "_" +
+                                    LocalDateTime.now().toString() +
+                                    mDatabase?.defaultFileExtension
                         )
                     }
                     R.id.menu_lock_all -> {
@@ -579,41 +568,6 @@ class GroupActivity : DatabaseLockActivity(),
                         }
                         is MainCredentialViewModel.UIState.OnMainCredentialCanceled -> {
                             mMainCredentialViewModel.onActionReceived()
-                        }
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                mUserVerificationViewModel.userVerificationState.collect { uVState ->
-                    when (uVState) {
-                        is UserVerificationViewModel.UVState.Loading -> {}
-                        is UserVerificationViewModel.UVState.OnUserVerificationCanceled -> {
-                            coordinatorLayout?.showError(uVState.error)
-                            mUserVerificationViewModel.onUserVerificationReceived()
-                        }
-                        is UserVerificationViewModel.UVState.OnUserVerificationSucceeded -> {
-                            val data = uVState.dataToVerify
-                            when (data.actionType) {
-                                UserVerificationActionType.EDIT_ENTRY -> {
-                                    editEntry(uVState.dataToVerify.database,  uVState.dataToVerify.entryId)
-                                }
-                                UserVerificationActionType.MERGE_FROM_DATABASE -> {
-                                    mExternalFileHelper?.openDocument()
-                                }
-                                UserVerificationActionType.SAVE_DATABASE_COPY_TO -> {
-                                    mExternalFileHelper?.createDocument(
-                                        getString(R.string.database_file_name_default) +
-                                                "_" +
-                                                LocalDateTime.now().toString() +
-                                                uVState.dataToVerify.database?.defaultFileExtension
-                                    )
-                                }
-                                else -> {}
-                            }
-                            mUserVerificationViewModel.onUserVerificationReceived()
                         }
                     }
                 }
@@ -1132,18 +1086,8 @@ class GroupActivity : DatabaseLockActivity(),
                 launchDialogForGroupUpdate(node as Group)
             }
             Type.ENTRY -> {
-                if ((node as Entry).getEntryInfo(database).isUserVerificationNeeded()) {
-                    checkUserVerification(
-                        userVerificationViewModel = mUserVerificationViewModel,
-                        dataToVerify = UserVerificationData(
-                            actionType = UserVerificationActionType.EDIT_ENTRY,
-                            database = database,
-                            entryId = node.nodeId
-                        )
-                    )
-                } else {
-                    editEntry(database, node.nodeId)
-                }
+                // Edit entry directly without user verification
+                editEntry(database, (node as Entry).nodeId)
             }
         }
         return true
