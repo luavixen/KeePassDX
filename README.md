@@ -4,18 +4,24 @@
 > This repository ([luavixen/KeePassDX](https://github.com/luavixen/KeePassDX)) is a fork of the original repository ([Kunzisoft/KeePassDX](https://github.com/Kunzisoft/KeePassDX)) with the new User Verification feature removed in [this commit](https://github.com/luavixen/KeePassDX/commit/0780c2772420c88d1d8d5c8f2b2ff23c9b8cd782).
 > The User Verification feature was added in v4.3.0 and this fork is currently up-to-date with v4.3.0. I ([Lua](https://github.com/luavixen/)) will attempt to keep this fork up-to-date with the original repository until an option is added to disable User Verification.
 >
-> **What is User Verification?**
+> **What is User Verification?**  
 > Starting in v4.3.0, KeePassDX asks for biometric authentication (fingerprint/face) or the first 4 characters of your password every time you copy a password or view a protected field.
 >
-> **Why remove it?**
+> **Why remove it?**  
 > If you use KeePassDX dozens of times per day and always lock your database when finished, these extra prompts add significant friction. This fork has the previous, simpler model: unlock your database once, use it freely until you lock it again.
 >
-> **Is this less secure?**
+> **Is this less secure?**  
 > The database itself is just as secure (same encryption), but there's no verification after unlocking. This works well if you manually lock your database after using it, which is still the expected way to use the app.
 >
-> **For more context, see:**
+> **For more context, see:**  
 > - [User Verification wiki](https://github.com/Kunzisoft/KeePassDX/wiki/User-Verification) (upstream documentation)
 > - [GitHub issue #2321](https://github.com/Kunzisoft/KeePassDX/issues/2321) (discussion about the feature)
+>
+> **How do I download this fork?**  
+> You can download and install this fork using [Obtainium](https://github.com/ImranR98/Obtainium):
+> <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/luavixen/KeePassDX">
+<img src="https://github.com/ImranR98/Obtainium/blob/main/assets/graphics/badge_obtainium.png?raw=true"
+alt="Get it on Obtainium" align="center" height="54"></a>
 
 <img alt="KeePassDX Icon" src="https://raw.githubusercontent.com/Kunzisoft/KeePassDX/master/art/icon.png"> **Lightweight password safe and manager for Android**, KeePassDX allows editing encrypted data in a single file in KeePass format and fill in the forms in a secure way.
 
@@ -69,7 +75,9 @@ Optional visual styles are accessible after a contribution (and a congratulatory
 
 > [!WARNING]
 > This repository ([luavixen/KeePassDX](https://github.com/luavixen/KeePassDX)) is a fork of the original repository ([Kunzisoft/KeePassDX](https://github.com/Kunzisoft/KeePassDX)).
-> Currently, the only supported way to use this fork is to clone the repository and compile the app yourself.
+> Currently, the only supported ways to use this fork are:  
+> - Downloading it via [Obtainium](https://github.com/ImranR98/Obtainium), see top of README
+> - Cloning the repository and compiling the app yourself
 
 ## Frequently Asked Questions
 
